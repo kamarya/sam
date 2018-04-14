@@ -2,10 +2,10 @@
  * @file sam.cpp
  * @author Behrooz Kamary Aliabadi
  * @date 19 Sep 2011
- * @brief The Sparse Associative Memory (SAM)
+ * @brief Sparse Associative Memory (SAM)
  *
- * The Sparse Associative Memory (SAM) is an associative memory
- * that resembles the human memory. For more details read the
+ * Sparse Associative Memory (SAM) is an associative memory
+ * resembling the human memory. For more details read the
  * references below.
  *
  * @see http://ieeexplore.ieee.org/document/6658945/
@@ -21,8 +21,8 @@ sam::sam(size_t nc, size_t nf)
 	nfanals   = nf;
 
     vec_weights = std::vector < std::vector < std::vector < std::vector <char> > > > (nclusters, 
-            std::vector < std::vector < std::vector <char> > > (nclusters,
-                std::vector < std::vector <char> > (nfanals,
+                    std::vector < std::vector < std::vector <char> > > (nclusters,
+                    std::vector < std::vector <char> > (nfanals,
                     std::vector <char> (nfanals,0))));
 }
 
@@ -30,12 +30,11 @@ sam::~sam()
 {
 }
 
-
 void sam::reset()
 {
-    for (size_t uint_cluster_i = 0;uint_cluster_i < nclusters;uint_cluster_i++)
+    for (size_t uint_cluster_i = 0; uint_cluster_i < nclusters; uint_cluster_i++)
     {
-        for (size_t uint_cluster_j = 0;uint_cluster_j < nclusters;uint_cluster_j++)
+        for (size_t uint_cluster_j = 0; uint_cluster_j < nclusters; uint_cluster_j++)
         {
             for (size_t uint_fanal_i = 0; uint_fanal_i < nfanals; uint_fanal_i++)
             {
@@ -48,27 +47,25 @@ void sam::reset()
     }
 }
 
-
-
 // This routine learns the two dimensional set of
 // messages given by 'vec_message'
-std::vector < std::vector <size_t> > sam::learn( std::vector < std::vector <size_t> > vec_message )
+std::vector<std::vector<size_t>> sam::learn(std::vector<std::vector<size_t>> vec_message)
 {
-    size_t uint_num_messages = vec_message.size();
-    size_t uint_cumulative_message_length = 0;
-    size_t uint_num_msg_clusters = 0;
-    size_t uint_random_cluster_counter = 0;
-    size_t uint_randint = 0;
+    size_t uint_num_messages                = vec_message.size();
+    size_t uint_cumulative_message_length   = 0;
+    size_t uint_num_msg_clusters            = 0;
+    size_t uint_random_cluster_counter      = 0;
+    size_t uint_randint                     = 0;
 
     // This part choose random cluster to learn the messages.
     // This is because, in the manuscript it is assumed that
     // the exploited clusters for each clique are chosen
     // uniformly random.
-    std::vector < std::vector <size_t> > vec_random_clusters(uint_num_messages, std::vector <size_t> (0));
+    std::vector<std::vector<size_t>> vec_random_clusters(uint_num_messages, std::vector<size_t>(0));
     for (size_t uint_msg_indx = 0; uint_msg_indx < uint_num_messages; uint_msg_indx++)
     {
         uint_num_msg_clusters = vec_message[uint_msg_indx].size();
-        while ( uint_random_cluster_counter < uint_num_msg_clusters )
+        while (uint_random_cluster_counter < uint_num_msg_clusters)
         {
             uint_randint = randint(nclusters) - 1;
             if (!exist(vec_random_clusters[uint_msg_indx], uint_randint))
@@ -91,7 +88,7 @@ std::vector < std::vector <size_t> > sam::learn( std::vector < std::vector <size
         {
             for (size_t uint_cluster_ = 0; uint_cluster_ < uint_num_msg_clusters; uint_cluster_++)
             {
-                if ( uint_cluster != uint_cluster_)
+                if (uint_cluster != uint_cluster_)
                     vec_weights
                         [vec_random_clusters[uint_msg_indx][uint_cluster]]
                         [vec_random_clusters[uint_msg_indx][uint_cluster_]]
@@ -104,28 +101,25 @@ std::vector < std::vector <size_t> > sam::learn( std::vector < std::vector <size
     return vec_random_clusters;
 }
 
-
-
 // This routine performs the blind recovery. The input parameters are the known sub-messages
 // given in 'vec_message' and their corresponding clusters given in 'vec_clusters'.
 // The default number of iterations in this recovery mode is set to one since it does not help
 // the error rate performance.
-std::vector <std::vector <size_t>> sam::recall_blind( std::vector <size_t> vec_message, std::vector <size_t> vec_clusters)
+std::vector<std::vector<size_t>> sam::recall_blind(std::vector<size_t> vec_message, std::vector<size_t> vec_clusters)
 {
 
     size_t uint_max_it = 1; // The number of iterations
 
     size_t uint_num_known_clusters = vec_message.size();
 
-    // The decoder data containers that are used during the iterations are defined and initialized here.
+    // The decoder data containers have been defined and initialized here.
 
     // This two dimensional std::vector holds the computed scores of fanals in each iteration.
-    std::vector <std::vector <size_t>> vec_network(nclusters, std::vector <size_t> (nfanals));
+    std::vector<std::vector<size_t>> vec_network(nclusters, std::vector<size_t>(nfanals));
     // This two dimensional std::vector keep the list of active fanals in each cluster.
-    std::vector <std::vector <size_t>> vec_network_list(nclusters, std::vector <size_t> (0));
+    std::vector<std::vector<size_t>> vec_network_list(nclusters, std::vector<size_t>(0));
     // This std::vector holds the list of clusters that have at least one active fanal.
-    std::vector <size_t> vec_clusters_lag = vec_clusters;
-
+    std::vector<size_t> vec_clusters_lag = vec_clusters;
 
     for (size_t uint_cluster = 0; uint_cluster < uint_num_known_clusters; uint_cluster++)
     {
@@ -133,9 +127,8 @@ std::vector <std::vector <size_t>> sam::recall_blind( std::vector <size_t> vec_m
         vec_network[vec_clusters[uint_cluster]][vec_message[uint_cluster] - 1] = 1;
     }
 
-
-    std::vector <size_t>::iterator itf;
-    std::vector <size_t>::iterator itc;
+    std::vector<size_t>::iterator itf;
+    std::vector<size_t>::iterator itc;
 
     for (size_t uint_it = 0; uint_it < uint_max_it; uint_it++)
     {
@@ -160,18 +153,15 @@ std::vector <std::vector <size_t>> sam::recall_blind( std::vector <size_t> vec_m
                             // (that may have more than one active fanal)
                             break;
                         }
-
                     }
                 }
-
             }
         }
 
+        // This part performs a global winner-take-all.
 
-        // This part performs a global winner-take-all. 
-
-        vec_network_list  = std::vector < std::vector <size_t> > (nclusters, std::vector <size_t> (0));
-        vec_clusters_lag = std::vector <size_t> (nclusters);
+        vec_network_list = std::vector<std::vector<size_t>>(nclusters, std::vector<size_t>(0));
+        vec_clusters_lag = std::vector<size_t>(nclusters);
         size_t uint_max_value_fanal;
 
         // obtains the maximum activity level in each cluster
@@ -187,29 +177,26 @@ std::vector <std::vector <size_t>> sam::recall_blind( std::vector <size_t> vec_m
             for (size_t uint_indx = 0; uint_indx < nfanals; uint_indx++)
             {
                 // find fanals that have a score equal to the maximum score.
-                if (vec_network[uint_cluster][uint_indx] == uint_max_value_fanal && exist(vec_clusters_lag,uint_cluster))
+                if (vec_network[uint_cluster][uint_indx] == uint_max_value_fanal && exist(vec_clusters_lag, uint_cluster))
                 {
 
                     vec_network[uint_cluster][uint_indx] = 1;
                     vec_network_list[uint_cluster].push_back(uint_indx + 1);
                 }
-                else vec_network[uint_cluster][uint_indx] = 0;
+                else
+                    vec_network[uint_cluster][uint_indx] = 0;
             }
-
         }
-
-
 
     } // end of iteration
 
-
     // message retrieval
 
-    std::vector <  std::vector <size_t> > vec_retrieved(2,std::vector <size_t> (vec_clusters_lag.size()));
+    std::vector<std::vector<size_t>> vec_retrieved(2, std::vector<size_t>(vec_clusters_lag.size()));
 
-    size_t uint_amb_counter = 0;
-    size_t uint_cluster_counter = 0;
-    std::vector <size_t>::iterator itcc;
+    size_t uint_amb_counter         = 0;
+    size_t uint_cluster_counter     = 0;
+    std::vector<size_t>::iterator   itcc;
 
     for (itc = vec_clusters_lag.begin(); itc != vec_clusters_lag.end(); itc++)
     {
@@ -230,34 +217,31 @@ std::vector <std::vector <size_t>> sam::recall_blind( std::vector <size_t> vec_m
         // If there are more than one fanal active, it informs the calling routine by retuning
         // back an empty vector.
         if (uint_amb_counter > 1)
-            return (std::vector <  std::vector <size_t> > (2,std::vector <size_t> (0)));
+            return (std::vector<std::vector<size_t>>(2, std::vector<size_t>(0)));
 
         uint_amb_counter = 0;
         uint_cluster_counter++;
-
     }
 
-    // It returns a two dimensional matrix 
-    // Row 0 holds the sub-messages 
+    // It returns a two dimensional matrix
+    // Row 0 holds the sub-messages
     // Row 1 holds the corresponding clusters
     return vec_retrieved;
 }
 
-std::vector < std::vector <size_t> > sam::recall_guided( std::vector <size_t> vec_message,
-        std::vector <size_t> vec_clusters,
-        std::vector <size_t> vec_clusters_all,
-        size_t uint_max_it)
+std::vector<std::vector<size_t>> sam::recall_guided(std::vector<size_t> vec_message,
+                                                    std::vector<size_t> vec_clusters,
+                                                    std::vector<size_t> vec_clusters_all,
+                                                    size_t uint_max_it)
 {
-
 
     size_t uint_num_known_clusters = vec_message.size();
     size_t nall = vec_clusters_all.size();
 
     // classical decoder data containers
-    std::vector < std::vector <size_t> > vec_network(nclusters, std::vector <size_t> (nfanals));
-    std::vector < std::vector <size_t> > vec_network_list(nclusters, std::vector <size_t> (0));
-    std::vector <size_t> vec_clusters_lag = vec_clusters;
-
+    std::vector<std::vector<size_t>>    vec_network(nclusters, std::vector<size_t>(nfanals));
+    std::vector<std::vector<size_t>>    vec_network_list(nclusters, std::vector<size_t>(0));
+    std::vector<size_t>                 vec_clusters_lag = vec_clusters;
 
     for (size_t uint_cluster = 0; uint_cluster < uint_num_known_clusters; uint_cluster++)
     {
@@ -265,13 +249,11 @@ std::vector < std::vector <size_t> > sam::recall_guided( std::vector <size_t> ve
         vec_network[vec_clusters[uint_cluster]][vec_message[uint_cluster] - 1] = 1;
     }
 
-
-    std::vector <size_t>::iterator itf;
-    std::vector <size_t>::iterator itc;
+    std::vector<size_t>::iterator itf;
+    std::vector<size_t>::iterator itc;
 
     for (size_t uint_it = 0; uint_it < uint_max_it; uint_it++)
     {
-
 
         for (size_t uint_cluster = 0; uint_cluster < nall; uint_cluster++)
         {
@@ -291,11 +273,10 @@ std::vector < std::vector <size_t> > sam::recall_guided( std::vector <size_t> ve
             }
         }
 
-
         // Winner-take-all
 
-        vec_network_list  = std::vector < std::vector <size_t> > (nclusters, std::vector <size_t> (0));
-        vec_clusters_lag = std::vector <size_t> (nclusters,0);
+        vec_network_list = std::vector<std::vector<size_t>>(nclusters, std::vector<size_t>(0));
+        vec_clusters_lag = std::vector<size_t>(nclusters, 0);
         size_t uint_max_value_fanal;
 
         // obtains the maximum activity level in each cluster
@@ -304,8 +285,8 @@ std::vector < std::vector <size_t> > sam::recall_guided( std::vector <size_t> ve
             vec_clusters_lag[vec_clusters_all[uint_cluster]] = max(vec_network[vec_clusters_all[uint_cluster]]);
         }
 
-        vec_clusters_lag        = max_indices(vec_clusters_lag);
-        uint_max_value_fanal    = max(vec_network[vec_clusters_lag[0]]);
+        vec_clusters_lag = max_indices(vec_clusters_lag);
+        uint_max_value_fanal = max(vec_network[vec_clusters_lag[0]]);
 
         for (size_t uint_cluster = 0; uint_cluster < nall; uint_cluster++)
         {
@@ -319,20 +300,17 @@ std::vector < std::vector <size_t> > sam::recall_guided( std::vector <size_t> ve
                         vec_network[vec_clusters_all[uint_cluster]][uint_indx] = 1;
                         vec_network_list[vec_clusters_all[uint_cluster]].push_back(uint_indx + 1);
                     }
-                    else vec_network[vec_clusters_all[uint_cluster]][uint_indx] = 0;
+                    else
+                        vec_network[vec_clusters_all[uint_cluster]][uint_indx] = 0;
                 }
             }
-
         }
-
-
 
     } // end of iteration
 
-
     // message retrieval
 
-    std::vector <  std::vector <size_t> > vec_retrieved(2,std::vector <size_t> (nall));
+    std::vector<std::vector<size_t>> vec_retrieved(2, std::vector<size_t>(nall));
 
     size_t uint_amb_counter = 0;
     size_t uint_cluster_counter = 0;
@@ -353,16 +331,14 @@ std::vector < std::vector <size_t> > sam::recall_guided( std::vector <size_t> ve
 
         // fanal ambiguity detection
         if (uint_amb_counter > 1)
-            return (std::vector <  std::vector <size_t> > (2,std::vector <size_t> (0)));
-
+            return (std::vector<std::vector<size_t>>(2, std::vector<size_t>(0)));
 
         uint_amb_counter = 0;
         uint_cluster_counter++;
-
     }
 
-    // It returns a two dimensional matrix 
-    // Row 0 holds the sub-messages 
+    // It returns a two dimensional matrix
+    // Row 0 holds the sub-messages
     // Row 1 holds the corresponding clusters
     return vec_retrieved;
 }
