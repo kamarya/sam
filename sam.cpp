@@ -105,10 +105,9 @@ std::vector<std::vector<size_t>> sam::learn(std::vector<std::vector<size_t>> vec
 // given in 'vec_message' and their corresponding clusters given in 'vec_clusters'.
 // The default number of iterations in this recovery mode is set to one since it does not help
 // the error rate performance.
-std::vector<std::vector<size_t>> sam::recall_blind(std::vector<size_t> vec_message, std::vector<size_t> vec_clusters)
+std::vector<std::vector<size_t>> sam::recall_blind(const std::vector<size_t>& vec_message, const std::vector<size_t>& vec_clusters)
 {
 
-    size_t uint_max_it = 1; // The number of iterations
 
     size_t uint_num_known_clusters = vec_message.size();
 
@@ -127,26 +126,22 @@ std::vector<std::vector<size_t>> sam::recall_blind(std::vector<size_t> vec_messa
         vec_network[vec_clusters[uint_cluster]][vec_message[uint_cluster] - 1] = 1;
     }
 
-    std::vector<size_t>::iterator itf;
-    std::vector<size_t>::iterator itc;
+    // This part computes the overall scores of all fanals that are connected to the
+    // active fanals (for the first iteration step they correspond to the partial message)
+    std::vector<std::thread> workers(nclusters);
 
-    for (size_t uint_it = 0; uint_it < uint_max_it; uint_it++)
+    for (size_t uint_cluster = 0; uint_cluster < nclusters; uint_cluster++)
     {
+        workers[uint_cluster] = std::thread([&, this, uint_cluster]() {
 
-        // This part computes the overall scores of all fanals that are connected to the
-        // active fanals (for the first iteration step they correspond to the partial message)
-
-        for (size_t uint_cluster = 0; uint_cluster < nclusters; uint_cluster++)
-        {
             for (size_t uint_fanal = 0; uint_fanal < nfanals; uint_fanal++)
             {
-
-                for (itc = vec_clusters_lag.begin(); itc != vec_clusters_lag.end(); itc++)
+                for (std::vector<size_t>::iterator itc = vec_clusters_lag.begin(); itc != vec_clusters_lag.end(); itc++)
                 {
-                    for (itf = vec_network_list[*itc].begin(); itf != vec_network_list[*itc].end(); itf++)
+                    for (std::vector<size_t>::iterator itf = vec_network_list[*itc].begin(); itf != vec_network_list[*itc].end(); itf++)
                     {
 
-                        if (vec_weights[uint_cluster][*itc][uint_fanal][*itf - 1] > 0)
+                        if (this->vec_weights[uint_cluster][*itc][uint_fanal][*itf - 1] > 0)
                         {
                             vec_network[uint_cluster][uint_fanal]++;
                             // 'break' is to assure a fanal receives only one signal unit from a cluster
@@ -156,39 +151,40 @@ std::vector<std::vector<size_t>> sam::recall_blind(std::vector<size_t> vec_messa
                     }
                 }
             }
-        }
+        });
+    }
 
-        // This part performs a global winner-take-all.
+    std::for_each(workers.begin(), workers.end(), std::mem_fn(&std::thread::join));
 
-        vec_network_list = std::vector<std::vector<size_t>>(nclusters, std::vector<size_t>(0));
-        vec_clusters_lag = std::vector<size_t>(nclusters);
-        size_t uint_max_value_fanal;
+    // This part performs a global winner-take-all.
 
-        // obtains the maximum activity level in each cluster
-        for (size_t uint_cluster = 0; uint_cluster < nclusters; uint_cluster++)
+    vec_network_list = std::vector<std::vector<size_t>>(nclusters, std::vector<size_t>(0));
+    vec_clusters_lag = std::vector<size_t>(nclusters);
+    size_t uint_max_value_fanal;
+
+    // obtains the maximum activity level in each cluster
+    for (size_t uint_cluster = 0; uint_cluster < nclusters; uint_cluster++)
+    {
+        vec_clusters_lag[uint_cluster] = max(vec_network[uint_cluster]);
+    }
+
+    vec_clusters_lag        = max_indices(vec_clusters_lag);
+    uint_max_value_fanal    = max(vec_network[vec_clusters_lag[0]]);
+
+    for (size_t uint_cluster = 0; uint_cluster < nclusters; uint_cluster++)
+    {
+        for (size_t uint_indx = 0; uint_indx < nfanals; uint_indx++)
         {
-            vec_clusters_lag[uint_cluster] = max(vec_network[uint_cluster]);
-        }
-        vec_clusters_lag = max_indices(vec_clusters_lag);
-        uint_max_value_fanal = max(vec_network[vec_clusters_lag[0]]);
-
-        for (size_t uint_cluster = 0; uint_cluster < nclusters; uint_cluster++)
-        {
-            for (size_t uint_indx = 0; uint_indx < nfanals; uint_indx++)
+            // find fanals that have a score equal to the maximum score.
+            if (vec_network[uint_cluster][uint_indx] == uint_max_value_fanal && exist(vec_clusters_lag, uint_cluster))
             {
-                // find fanals that have a score equal to the maximum score.
-                if (vec_network[uint_cluster][uint_indx] == uint_max_value_fanal && exist(vec_clusters_lag, uint_cluster))
-                {
-
-                    vec_network[uint_cluster][uint_indx] = 1;
-                    vec_network_list[uint_cluster].push_back(uint_indx + 1);
-                }
-                else
-                    vec_network[uint_cluster][uint_indx] = 0;
+                vec_network[uint_cluster][uint_indx] = 1;
+                vec_network_list[uint_cluster].push_back(uint_indx + 1);
             }
+            else
+                vec_network[uint_cluster][uint_indx] = 0;
         }
-
-    } // end of iteration
+    }
 
     // message retrieval
 
@@ -198,7 +194,7 @@ std::vector<std::vector<size_t>> sam::recall_blind(std::vector<size_t> vec_messa
     size_t uint_cluster_counter     = 0;
     std::vector<size_t>::iterator   itcc;
 
-    for (itc = vec_clusters_lag.begin(); itc != vec_clusters_lag.end(); itc++)
+    for (std::vector<size_t>::iterator itc = vec_clusters_lag.begin(); itc != vec_clusters_lag.end(); itc++)
     {
 
         vec_retrieved[1][uint_cluster_counter] = *itc;
@@ -229,9 +225,9 @@ std::vector<std::vector<size_t>> sam::recall_blind(std::vector<size_t> vec_messa
     return vec_retrieved;
 }
 
-std::vector<std::vector<size_t>> sam::recall_guided(std::vector<size_t> vec_message,
-                                                    std::vector<size_t> vec_clusters,
-                                                    std::vector<size_t> vec_clusters_all,
+std::vector<std::vector<size_t>> sam::recall_guided(const std::vector<size_t>& vec_message,
+                                                    const std::vector<size_t>& vec_clusters,
+                                                    const std::vector<size_t>& vec_clusters_all,
                                                     size_t uint_max_it)
 {
 
@@ -249,29 +245,32 @@ std::vector<std::vector<size_t>> sam::recall_guided(std::vector<size_t> vec_mess
         vec_network[vec_clusters[uint_cluster]][vec_message[uint_cluster] - 1] = 1;
     }
 
-    std::vector<size_t>::iterator itf;
-    std::vector<size_t>::iterator itc;
-
     for (size_t uint_it = 0; uint_it < uint_max_it; uint_it++)
     {
+        std::vector<std::thread> workers(nall);
 
         for (size_t uint_cluster = 0; uint_cluster < nall; uint_cluster++)
         {
-            for (size_t uint_fanal = 0; uint_fanal < nfanals; uint_fanal++)
-            {
-                for (itc = vec_clusters_lag.begin(); itc != vec_clusters_lag.end(); itc++)
+            workers[uint_cluster] = std::thread([&, this, uint_cluster]() {
+
+                for (size_t uint_fanal = 0; uint_fanal < nfanals; uint_fanal++)
                 {
-                    for (itf = vec_network_list[*itc].begin(); itf != vec_network_list[*itc].end(); itf++)
+                    for (std::vector<size_t>::iterator itc = vec_clusters_lag.begin(); itc != vec_clusters_lag.end(); itc++)
                     {
-                        if (vec_weights[vec_clusters_all[uint_cluster]][*itc][uint_fanal][*itf - 1] > 0)
+                        for (std::vector<size_t>::iterator itf = vec_network_list[*itc].begin(); itf != vec_network_list[*itc].end(); itf++)
                         {
-                            vec_network[vec_clusters_all[uint_cluster]][uint_fanal]++;
-                            break;
+                            if (this->vec_weights[vec_clusters_all[uint_cluster]][*itc][uint_fanal][*itf - 1] > 0)
+                            {
+                                vec_network[vec_clusters_all[uint_cluster]][uint_fanal]++;
+                                break;
+                            }
                         }
                     }
                 }
-            }
+            });
         }
+
+        std::for_each(workers.begin(), workers.end(), std::mem_fn(&std::thread::join));
 
         // Winner-take-all
 
@@ -285,8 +284,8 @@ std::vector<std::vector<size_t>> sam::recall_guided(std::vector<size_t> vec_mess
             vec_clusters_lag[vec_clusters_all[uint_cluster]] = max(vec_network[vec_clusters_all[uint_cluster]]);
         }
 
-        vec_clusters_lag = max_indices(vec_clusters_lag);
-        uint_max_value_fanal = max(vec_network[vec_clusters_lag[0]]);
+        vec_clusters_lag        = max_indices(vec_clusters_lag);
+        uint_max_value_fanal    = max(vec_network[vec_clusters_lag[0]]);
 
         for (size_t uint_cluster = 0; uint_cluster < nall; uint_cluster++)
         {
@@ -312,7 +311,7 @@ std::vector<std::vector<size_t>> sam::recall_guided(std::vector<size_t> vec_mess
 
     std::vector<std::vector<size_t>> vec_retrieved(2, std::vector<size_t>(nall));
 
-    size_t uint_amb_counter = 0;
+    size_t uint_amb_counter     = 0;
     size_t uint_cluster_counter = 0;
 
     for (size_t uint_cluster = 0; uint_cluster < nall; uint_cluster++)

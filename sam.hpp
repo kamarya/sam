@@ -5,8 +5,8 @@
  * @brief Sparse Associative Memory (SAM)
  *
  * Sparse Associative Memory (SAM) is an associative memory
- * resembling the human memory. For more details read the
- * references below.
+ * resembling with the aim of resembling the human memory.
+ * For more details read the references below.
  *
  * @see http://ieeexplore.ieee.org/document/6658945/
  * @see https://tel.archives-ouvertes.fr/tel-00962603/document
@@ -20,15 +20,17 @@
 #include <fstream>
 #include <iomanip>
 #include <ctime>
+#include <thread>
+#include <algorithm>
 
 #include "utility.hpp"
 
 /**
  * @class sam
  *
- * @brief Sparse Associative Memory (SAM) class
+ * @brief Sparse Associative Memory (SAM) abstraction class
  *
- * This class implements the Sparse Associative Memory (SAM)
+ * The class implements the Sparse Associative Memory (SAM)
  * described in the given references.
  *
  */
@@ -66,14 +68,14 @@ class sam
      * This method implements an algorithm, namely, blind recall since the network knows neither
      * the entire message nor their corresponding clusters.
      */
-    std::vector<std::vector<size_t>> recall_blind(std::vector<size_t> vec_message, std::vector<size_t> vec_clusters);
+    std::vector<std::vector<size_t>> recall_blind(const std::vector<size_t>& vec_message, const std::vector<size_t>& vec_clusters);
 
     /**
      * @brief recall the entire message given a few of its elements (a partially known message)
      */
-    std::vector<std::vector<size_t>> recall_guided(std::vector<size_t> vec_message,
-                                                   std::vector<size_t> vec_clusters,
-                                                   std::vector<size_t> vec_clusters_all,
+    std::vector<std::vector<size_t>> recall_guided(const std::vector<size_t>& vec_message,
+                                                   const std::vector<size_t>& vec_clusters,
+                                                   const std::vector<size_t>& vec_clusters_all,
                                                    size_t uint_max_it);
 
     /**

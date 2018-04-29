@@ -1,3 +1,7 @@
+/**
+ * @file utility.hpp
+ * @brief utility functions
+ */
 #ifndef __UTILITY_HPP__
 #define __UTILITY_HPP__
 
