@@ -3,7 +3,18 @@
 In conformity with [reproducible research](https://en.wikipedia.org/wiki/Reproducibility#Reproducible_research) routines this repository reproduces the results of [Storing Sparse Messages in Networks of Neural Cliques](https://ieeexplore.ieee.org/document/6658945/?reload=true&arnumber=6658945).
 
 
+## Introduction
+Consider a set of codewords to be transferred over a [erasure channel](https://en.wikipedia.org/wiki/Erasure_channel).
+SAM can learn the set and recall the entire transmitted codewords from the punctured copies (with missing elements or characters).
 ## Results
+```ntrials```: number of trials to reach ```num_mc``` (equal to 500) errors.
+
+```nmsgs```: number of learned messages i.e. codewords.
+
+```peg```: estimated probability of error for guided recall after ```num_it``` (equal to 4) iterations.
+
+```peg```: estimated probability of error for blind recall.
+
 ```
         ntrials          nmsgs            peg            peb
 
