@@ -24,6 +24,8 @@ sam::sam(size_t nc, size_t nf)
                     std::vector < std::vector < std::vector <char> > > (nclusters,
                     std::vector < std::vector <char> > (nfanals,
                     std::vector <char> (nfanals,0))));
+
+    ncores = std::thread::hardware_concurrency();
 }
 
 sam::~sam()
@@ -49,7 +51,7 @@ void sam::reset()
 
 // This routine learns the two dimensional set of
 // messages given by 'vec_message'
-std::vector<std::vector<size_t>> sam::learn(std::vector<std::vector<size_t>> vec_message)
+std::vector<std::vector<size_t>> sam::learn(const std::vector<std::vector<size_t>>& vec_message)
 {
     size_t uint_num_messages                = vec_message.size();
     size_t uint_cumulative_message_length   = 0;
@@ -58,9 +60,8 @@ std::vector<std::vector<size_t>> sam::learn(std::vector<std::vector<size_t>> vec
     size_t uint_randint                     = 0;
 
     // This part choose random cluster to learn the messages.
-    // This is because, in the manuscript it is assumed that
-    // the exploited clusters for each clique are chosen
-    // uniformly random.
+    // In the manuscript it is assumed that the exploited clusters
+    // for each clique are chosen uniformly random.
     std::vector<std::vector<size_t>> vec_random_clusters(uint_num_messages, std::vector<size_t>(0));
     for (size_t uint_msg_indx = 0; uint_msg_indx < uint_num_messages; uint_msg_indx++)
     {
@@ -160,7 +161,6 @@ std::vector<std::vector<size_t>> sam::recall_blind(const std::vector<size_t>& ve
 
     vec_network_list = std::vector<std::vector<size_t>>(nclusters, std::vector<size_t>(0));
     vec_clusters_lag = std::vector<size_t>(nclusters);
-    size_t uint_max_value_fanal;
 
     // obtains the maximum activity level in each cluster
     for (size_t uint_cluster = 0; uint_cluster < nclusters; uint_cluster++)
@@ -169,14 +169,14 @@ std::vector<std::vector<size_t>> sam::recall_blind(const std::vector<size_t>& ve
     }
 
     vec_clusters_lag        = max_indices(vec_clusters_lag);
-    uint_max_value_fanal    = max(vec_network[vec_clusters_lag[0]]);
+    size_t max_value_fanal  = max(vec_network[vec_clusters_lag[0]]);
 
     for (size_t uint_cluster = 0; uint_cluster < nclusters; uint_cluster++)
     {
         for (size_t uint_indx = 0; uint_indx < nfanals; uint_indx++)
         {
             // find fanals that have a score equal to the maximum score.
-            if (vec_network[uint_cluster][uint_indx] == uint_max_value_fanal && exist(vec_clusters_lag, uint_cluster))
+            if (vec_network[uint_cluster][uint_indx] == max_value_fanal && exist(vec_clusters_lag, uint_cluster))
             {
                 vec_network[uint_cluster][uint_indx] = 1;
                 vec_network_list[uint_cluster].push_back(uint_indx + 1);
@@ -192,7 +192,6 @@ std::vector<std::vector<size_t>> sam::recall_blind(const std::vector<size_t>& ve
 
     size_t uint_amb_counter         = 0;
     size_t uint_cluster_counter     = 0;
-    std::vector<size_t>::iterator   itcc;
 
     for (std::vector<size_t>::iterator itc = vec_clusters_lag.begin(); itc != vec_clusters_lag.end(); itc++)
     {
@@ -208,12 +207,13 @@ std::vector<std::vector<size_t>> sam::recall_blind(const std::vector<size_t>& ve
             }
         }
 
-        // fanal ambiguity detection
-        // This part checks whether there are more than one fanal is active in a cluster.
-        // If there are more than one fanal active, it informs the calling routine by retuning
-        // back an empty vector.
+        // Fanal ambiguity detection:
+        // This part checks whether there is more than one active fanal in a cluster.
+        // In that case it returns an empty vector (see the references for more info.).
         if (uint_amb_counter > 1)
+        {
             return (std::vector<std::vector<size_t>>(2, std::vector<size_t>(0)));
+        }
 
         uint_amb_counter = 0;
         uint_cluster_counter++;
@@ -336,8 +336,8 @@ std::vector<std::vector<size_t>> sam::recall_guided(const std::vector<size_t>& v
         uint_cluster_counter++;
     }
 
-    // It returns a two dimensional matrix
-    // Row 0 holds the sub-messages
-    // Row 1 holds the corresponding clusters
+    // It returns a two dimensional std::vector
+    // row 0 holds the sub-messages
+    // row 1 holds the corresponding clusters
     return vec_retrieved;
 }

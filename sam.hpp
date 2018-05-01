@@ -60,7 +60,7 @@ class sam
      *
      * A message element is a number between zero and the number of fanals in each cluster.
      */
-    std::vector<std::vector<size_t>> learn(std::vector<std::vector<size_t>> vec_message);
+    std::vector<std::vector<size_t>> learn(const std::vector<std::vector<size_t>>& vec_message);
 
     /**
      * @brief recall the entire message given a few of its elements (a partially known message)
@@ -88,6 +88,7 @@ class sam
 
     size_t nclusters; // The total number of clusters in the network
     size_t nfanals;   // The number of fanals in each cluster
+    size_t ncores;
 };
 
 #endif

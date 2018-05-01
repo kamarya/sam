@@ -1,7 +1,6 @@
-CXX=g++
 all:
-	$(CXX) sam.cpp utility.cpp main.cxx -o main -O3 -std=c++11 -lpthread
+	g++ sam.cpp utility.cpp main.cxx -o samx -O3 -Wall -std=c++11 -lpthread
 clean:
-	rm -f main
+	rm -f samx
 doxygen:
 	doxygen -s doxygen.cfg

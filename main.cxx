@@ -17,43 +17,200 @@
  * @see https://cordis.europa.eu/project/rcn/102141_en.html
  */
 
+#include <unistd.h>
+#include <getopt.h>
+#include <stdlib.h>
+#include <sys/resource.h>
+
+#include <stdexcept>
 #include <iostream>
 #include <fstream>
 #include <iomanip>
 #include <ctime>
+#include <cstring>
 
 #include "sam.hpp"
 
 #define CWIDTH  15
 
+// network parameters
+
+size_t nc = 100; // The total number of clusters in the network
+size_t nf = 64;   // The number of fanals in each cluster
+size_t cmax = 12; // The maximum message order
+size_t cmin = 12; // The minimum message order
+
+// uniformly random generated messages' parameters
+
+size_t min_num = 0.5e5; // The minimum number of learnd messages
+size_t max_num = 4.5e5; // The maximum number of learnd messages
+size_t num_steps = 30;  // The number of simulation steps
+size_t num_unknowns = 3;
+
+// algorithmic parameters
+
+size_t num_it = 4;   // number of iterations
+size_t num_mc = 500; // The observed number of errors
+
+const char* filename = nullptr;
+int         prio     = 0;
+
+int  run(void);
+int  setprio(int);
+void usage(const char* progname);
+
 int main(int argc, char **argv)
+{
+    static struct option long_options[] =
+        {
+            {"nmin", required_argument, 0, 'm'},
+            {"nmax", required_argument, 0, 'x'},
+            {"nit", required_argument, 0, 'i'},
+            {"nf", required_argument, 0, 'f'},
+            {"nc", required_argument, 0, 'c'},
+            {"ne", required_argument, 0, 'e'},
+            {"nmc", required_argument, 0, 'o'},
+            {"csv", required_argument, 0, 'r'},
+            {"prio", required_argument, 0, 'p'},
+            {"help", no_argument, 0, 'h'},
+            {0, 0, 0, 0},
+        };
+
+    const char *const short_opts = "hm:x:i:f:c:e:o:r:p:";
+
+    while (true)
+    {
+        const auto opt = getopt_long(argc, argv, short_opts, long_options, nullptr);
+
+        if (-1 == opt)
+            break;
+
+        switch (opt)
+        {
+        case 'm':
+            try { min_num = std::stoi(optarg);} catch (...) {/*don't care*/}
+            break;
+        case 'x':
+            try { max_num = std::stoi(optarg);} catch (...) {/*don't care*/}
+            break;
+        case 'o':
+            try { num_mc = std::stoi(optarg);} catch (...) {/*don't care*/}
+            break;
+        case 'c':
+            try { nc     = std::stoi(optarg);} catch (...) {/*don't care*/}
+            break;
+        case 'f':
+            try { nf     = std::stoi(optarg);} catch (...) {/*don't care*/}
+            break;
+        case 'r':
+            filename     = optarg;
+            break;
+        case 'p':
+            prio         = std::stoi(optarg);
+            break;
+        case 'h': // -h or --help
+            usage(argv[0]);
+            return EXIT_SUCCESS;
+        case '?': // unrecognized option
+        default:
+            usage(argv[0]);
+            return EXIT_FAILURE;
+        }
+    }
+
+
+    if (filename == nullptr)
+    {
+        usage(argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    if (max_num < min_num)
+    {
+        std::cerr << "maximum number of stored messages must be smaller than minimum number of messages." << std::endl;
+        usage(argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    if (prio != 0)
+    {
+        if (setprio(prio) != 0)
+        {
+            std::cerr << "failed to set the process priority." << std::endl;
+            std::cerr << std::strerror(errno) << std::endl;
+            return EXIT_FAILURE;
+        }
+    }
+
+    return run();
+}
+
+void usage(const char* progname)
+{
+    std::cerr << "Usage : " << progname << "  [-r|--csv] <filename>  [options]" << std::endl;
+    std::cerr << std::left << std::setw(CWIDTH) << "-h | --help " << "this help message." << std::endl;
+    std::cerr << std::left << std::setw(CWIDTH) << "-m | --nmin " << "minimum number of stored messages." << std::endl;
+    std::cerr << std::left << std::setw(CWIDTH) << "-x | --nmax " << "maximum number of stored messages." << std::endl;
+    std::cerr << std::left << std::setw(CWIDTH) << "-o | --nmc "  << "Monte-Carlo error count." << std::endl;
+    std::cerr << std::left << std::setw(CWIDTH) << "-c | --nc "   << "total number of clusters." << std::endl;
+    std::cerr << std::left << std::setw(CWIDTH) << "-f | --nf "   << "number of fanals in each cluster." << std::endl;
+    std::cerr << std::left << std::setw(CWIDTH) << "-p | --prio " << "set process priority (-20 is the highest and 0 is the lowest)." << std::endl;
+    std::cerr << std::left << std::setw(CWIDTH) << "-r | --csv "  << "the results' file name in CSV format." << std::endl;
+}
+
+int setprio(int prio)
+{
+    id_t pid = getpid();
+    int ret = setpriority(PRIO_PROCESS, pid, prio);
+
+    if (ret == 0 && getuid() == 0)
+    {
+        const char *realuid = getenv("SUDO_UID");
+        const char *realgid = getenv("SUDO_GID");
+
+        if (realgid != nullptr && realuid != nullptr)
+        {
+
+            try
+            {
+                ret = std::stoi(realgid);
+            }
+            catch (...)
+            {
+                return -1;
+            }
+
+            ret = setgid(ret);
+
+            if (ret != 0)
+                return -1;
+
+            try
+            {
+                ret = std::stoi(realuid);
+            }
+            catch (...)
+            {
+                return -1;
+            }
+
+            ret = setuid(ret);
+        }
+    }
+
+    return ret;
+}
+
+int run(void)
 {
     std::srand(std::time(nullptr));
 
-    // network parameters
-
-    size_t nc   = 100;  // The total number of clusters in the network
-    size_t nf   = 64;   // The number of fanals in each cluster
-    size_t cmax = 12;   // The maximum message order
-    size_t cmin = 12;   // The minimum message order
-
-    // uniformly random generated messages' parameters
-
-    size_t min_num         = 0.5e5; // The minimum number of learnd messages
-    size_t max_num         = 4.5e5; // The maximum number of learnd messages
-    size_t num_steps       = 30;  // The number of simulation steps
-    size_t num_step        = (max_num - min_num) / num_steps;
-    size_t num_unknowns    = 3;
-
-    // algorithmic parameters
-
-    size_t num_it          = 4;     // number of iterations
-    size_t num_mc          = 500;   // The observed number of errors
+    size_t num_step = (max_num - min_num) / num_steps;
 
     sam memory(nc, nf);
 
     std::ofstream fs_results;
-    fs_results.open("results.csv", std::ios::out);
+    fs_results.open(filename, std::ios::out);
 
     if (!fs_results)
     {
