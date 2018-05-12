@@ -9,8 +9,7 @@ std::vector<size_t> max_indices(const std::vector<size_t>& vec_arg)
 {
 
     size_t uint_vec_size = vec_arg.size();
-    if (uint_vec_size == 0)
-        return std::vector<size_t>(0);
+    if (uint_vec_size == 0) return std::vector<size_t>(0);
     size_t uint_max_value = vec_arg[0];
     std::vector<size_t> vec_indices(0);
 
@@ -34,7 +33,6 @@ std::vector<size_t> max_indices(const std::vector<size_t>& vec_arg)
 size_t max(const std::vector<size_t>& vec_arg)
 {
     size_t uint_max_value = vec_arg[0];
-    size_t uint_max_indx = 0;
     size_t uint_vec_size = vec_arg.size();
 
     for (size_t uint_indx = 1; uint_indx < uint_vec_size; uint_indx++)
@@ -42,7 +40,6 @@ size_t max(const std::vector<size_t>& vec_arg)
         if (vec_arg[uint_indx] > uint_max_value)
         {
             uint_max_value = vec_arg[uint_indx];
-            uint_max_indx = uint_indx;
         }
     }
 
@@ -97,7 +94,7 @@ std::vector<std::vector<size_t>> sort_clusters(const std::vector<std::vector<siz
         if (index == SIZE_MAX)
         {
             vec_return[0][uint_index] = 0;
-            vec_return[1][uint_index] = SIZE_MAX - 1; // This is to indicate that a cluster error occurred.
+            vec_return[1][uint_index] = SIZE_MAX; // This is to indicate that a cluster error occurred.
         }
         else
         {

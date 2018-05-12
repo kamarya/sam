@@ -31,29 +31,30 @@
 
 #include "sam.hpp"
 
-#define CWIDTH  15
+#define CWIDTH          15
+#define USAGE_STDERR    std::cerr << std::left << std::setw(CWIDTH)
 
 // network parameters
 
-size_t nc = 100; // The total number of clusters in the network
-size_t nf = 64;   // The number of fanals in each cluster
-size_t cmax = 12; // The maximum message order
-size_t cmin = 12; // The minimum message order
+size_t nc               = 100; // The total number of clusters in the network
+size_t nf               = 64;   // The number of fanals in each cluster
+size_t cmax             = 12; // The maximum message order
+size_t cmin             = 12; // The minimum message order
 
 // uniformly random generated messages' parameters
 
-size_t min_num = 0.5e5; // The minimum number of learnd messages
-size_t max_num = 4.5e5; // The maximum number of learnd messages
-size_t num_steps = 30;  // The number of simulation steps
-size_t num_unknowns = 3;
+size_t min_num          = 0.5e5; // The minimum number of learnd messages
+size_t max_num          = 4.5e5; // The maximum number of learnd messages
+size_t num_steps        = 30;  // The number of simulation steps
+size_t num_unknowns     = 3;
 
 // algorithmic parameters
 
-size_t num_it = 4;   // number of iterations
-size_t num_mc = 500; // The observed number of errors
+size_t num_it           = 4;   // number of iterations
+size_t num_mc           = 500; // The observed number of errors
 
-const char* filename = nullptr;
-int         prio     = 0;
+const char* filename    = nullptr;
+int         prio        = 0;
 
 int  run(void);
 int  setprio(int);
@@ -122,13 +123,18 @@ int main(int argc, char **argv)
     if (filename == nullptr)
     {
         usage(argv[0]);
+
+        std::cerr << std::endl << "error: you must specify the results filename." << std::endl;
+
         return EXIT_FAILURE;
     }
 
     if (max_num < min_num)
     {
-        std::cerr << "maximum number of stored messages must be smaller than minimum number of messages." << std::endl;
         usage(argv[0]);
+
+        std::cerr << std::endl << "error: nmax < nmin is invalid." << std::endl;
+
         return EXIT_FAILURE;
     }
 
@@ -136,7 +142,7 @@ int main(int argc, char **argv)
     {
         if (setprio(prio) != 0)
         {
-            std::cerr << "failed to set the process priority." << std::endl;
+            std::cerr << "error: failed to set the process priority." << std::endl;
             std::cerr << std::strerror(errno) << std::endl;
             return EXIT_FAILURE;
         }
@@ -147,15 +153,15 @@ int main(int argc, char **argv)
 
 void usage(const char* progname)
 {
-    std::cerr << "Usage : " << progname << "  [-r|--csv] <filename>  [options]" << std::endl;
-    std::cerr << std::left << std::setw(CWIDTH) << "-h | --help " << "this help message." << std::endl;
-    std::cerr << std::left << std::setw(CWIDTH) << "-m | --nmin " << "minimum number of stored messages." << std::endl;
-    std::cerr << std::left << std::setw(CWIDTH) << "-x | --nmax " << "maximum number of stored messages." << std::endl;
-    std::cerr << std::left << std::setw(CWIDTH) << "-o | --nmc "  << "Monte-Carlo error count." << std::endl;
-    std::cerr << std::left << std::setw(CWIDTH) << "-c | --nc "   << "total number of clusters." << std::endl;
-    std::cerr << std::left << std::setw(CWIDTH) << "-f | --nf "   << "number of fanals in each cluster." << std::endl;
-    std::cerr << std::left << std::setw(CWIDTH) << "-p | --prio " << "set process priority (-20 is the highest and 0 is the lowest)." << std::endl;
-    std::cerr << std::left << std::setw(CWIDTH) << "-r | --csv "  << "the results' file name in CSV format." << std::endl;
+    std::cerr << "Usage : " << progname << "  [options]" << std::endl;
+    USAGE_STDERR << "-h | --help " << "this help message." << std::endl;
+    USAGE_STDERR << "-m | --nmin " << "minimum number of stored messages." << std::endl;
+    USAGE_STDERR << "-x | --nmax " << "maximum number of stored messages." << std::endl;
+    USAGE_STDERR << "-o | --nmc "  << "Monte-Carlo error count." << std::endl;
+    USAGE_STDERR << "-c | --nc "   << "total number of clusters." << std::endl;
+    USAGE_STDERR << "-f | --nf "   << "number of fanals in each cluster." << std::endl;
+    USAGE_STDERR << "-p | --prio " << "set process priority (-20 is the highest and 0 is the lowest)." << std::endl;
+    USAGE_STDERR << "-r | --csv "  << "the results' file name in CSV format." << std::endl;
 }
 
 int setprio(int prio)
@@ -257,7 +263,7 @@ int run(void)
             for (size_t indx = 0; indx < num_messages; indx++)
             {
                 num_clusters = cmin + randint(cmax - cmin + 1) - 1;
-
+                vec_messages[indx].reserve(num_clusters);
                 for (size_t jndx = 0; jndx < num_clusters; jndx++)
                 {
                     vec_messages[indx].push_back(randint(nf));
