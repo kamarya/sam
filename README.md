@@ -4,7 +4,7 @@ In conformity with [reproducible research](https://en.wikipedia.org/wiki/Reprodu
 
 
 ## Introduction
-As an application of this neural network, consider a set of codewords to be sent over a [erasure channel](https://en.wikipedia.org/wiki/Erasure_channel).
+As an application of this neural network, consider a set of codewords to be sent over an [erasure channel](https://en.wikipedia.org/wiki/Erasure_channel).
 SAM can learn the set and recall the entire transmitted codewords from the punctured copies (with missing elements or characters).
 
 [Binary classification](https://en.wikipedia.org/wiki/Binary_classification) is an another example. SAM learns a set of messages and then
