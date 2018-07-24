@@ -1,20 +1,23 @@
 ## Sparse Associative Memory (SAM)
 
-In conformity with [reproducible research](https://en.wikipedia.org/wiki/Reproducibility#Reproducible_research) routines this repository reproduces the results of [Storing Sparse Messages in Networks of Neural Cliques](https://ieeexplore.ieee.org/document/6658945/?reload=true&arnumber=6658945).
+In conformity with [reproducible research](https://en.wikipedia.org/wiki/Reproducibility#Reproducible_research)
+routines this repository reproduces the results of
+[Storing Sparse Messages in Networks of Neural Cliques](https://ieeexplore.ieee.org/document/6658945/?reload=true&arnumber=6658945).
 
 
 ## Introduction
 As an application of this neural network, consider a set of codewords to be sent over an [erasure channel](https://en.wikipedia.org/wiki/Erasure_channel).
 SAM can learn the set and recall the entire transmitted codewords from the punctured copies (with missing elements or characters).
 
-[Binary classification](https://en.wikipedia.org/wiki/Binary_classification) is an another example. SAM learns a set of messages and then
-it can recall from either partial or noisy messages whether the messages had been learned or not.
+[Binary classification](https://en.wikipedia.org/wiki/Binary_classification) is an another example.
+SAM learns a set of messages and then it can recall from either partial or noisy (distorted)
+messages whether the messages had been learned or not.
 
 ## Results
 
 The following results have been used to reproduce Fig. 3 of the above article.
 However you may change the simulation parameters through the command-line options (see ```samx --help```).
-The code is documented using inline and Doxygen syntax to make it easy to understand and to pave the way
+The code is documented using inline comments and Doxygen syntax to make it easy to understand and to pave the way
 for further developments.
 
 ```ntrials```: number of trials to reach ```num_mc``` (equal to 500) errors.
