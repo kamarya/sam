@@ -26,7 +26,7 @@ for further developments.
 
 ```peg```: estimated probability of error for guided recall after ```num_it``` (equal to 4) iterations.
 
-```peg```: estimated probability of error for blind recall.
+```peb```: estimated probability of error for blind recall.
 
 ```
         ntrials          nmsgs            peg            peb
