@@ -1,12 +1,12 @@
 ## Sparse Associative Memory (SAM)
-
 In conformity with [reproducible research](https://en.wikipedia.org/wiki/Reproducibility#Reproducible_research)
 routines this repository reproduces the results of
-[Storing Sparse Messages in Networks of Neural Cliques](https://ieeexplore.ieee.org/document/6658945/?reload=true&arnumber=6658945).
+[Storing Sparse Messages in Networks of Neural Cliques](https://ieeexplore.ieee.org/document/6658945/?reload=true&arnumber=6658945). Here a *message* is a sequence of characters taken from an alphabet. The message is considered [sparse](https://en.wikipedia.org/wiki/Sparse_matrix) since we assume (i.e. a-priori know that) a certain number of elements are *nil*. This has been leveraged to extend the capacity and the performance of the neural network.
 
 
 ## Introduction
-As an application of this neural network, consider a set of codewords to be sent over an [erasure channel](https://en.wikipedia.org/wiki/Erasure_channel).
+As an application of this [Recurrent Neural Network (RNN)](https://en.wikipedia.org/wiki/Recurrent_neural_network),
+consider a set of codewords to be sent over an [erasure channel](https://en.wikipedia.org/wiki/Erasure_channel).
 SAM can learn the set and recall the entire transmitted codewords from the punctured copies (with missing elements or characters).
 
 [Binary classification](https://en.wikipedia.org/wiki/Binary_classification) is an another example.
@@ -14,7 +14,6 @@ SAM learns a set of messages and then it can recall from either partial or noisy
 messages whether the messages had been learned or not.
 
 ## Results
-
 The following results have been used to reproduce Fig. 3 of the above article.
 However you may change the simulation parameters through the command-line options (see ```samx --help```).
 The code is documented using inline comments and Doxygen syntax to make it easy to understand and to pave the way
